@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const hljs = require('highlight.js');
+const { imagePath } = require('../config/IDs');
 
 const generateCodeSnippet = async (codeSnippet, language = "bash") => {
     const highlightedCode = hljs.highlight(codeSnippet, { language }).value;
@@ -41,7 +42,7 @@ const generateCodeSnippet = async (codeSnippet, language = "bash") => {
         height: Math.ceil(boundingBox.height)
     });
 
-    await page.screenshot({ path: 'code-snippet.png' });
+    await page.screenshot({ path: imagePath });
     await browser.close();
 
     return true;

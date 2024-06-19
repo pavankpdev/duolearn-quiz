@@ -31,7 +31,7 @@ const extractQuizComponents = (blocks) => {
                 if (currentSection === 'question') {
                     components.question = textContent;
                 } else if (currentSection === 'options') {
-                    components.options.push(textContent.slice(3, textContent.length - 1));
+                    components.options.push(textContent);
                 } else if (currentSection === 'answer') {
                     components.answer += textContent;
                 }

@@ -1,3 +1,32 @@
-2024/06/19-13:31:43.350 3ed4 Reusing MANIFEST C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2024/06/19-13:31:43.351 3ed4 Recovering log #1646
-2024/06/19-13:31:43.412 3ed4 Reusing old log C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001646.log 
+2024/06/19-13:57:35.257 61c Reusing MANIFEST C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/06/19-13:57:35.259 61c Recovering log #1762
+2024/06/19-13:57:35.301 61c Reusing old log C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001762.log 
+2024/06/19-13:57:35.302 61c Delete type=2 #1750
+2024/06/19-13:57:35.302 61c Delete type=2 #1751
+2024/06/19-13:57:35.302 61c Delete type=2 #1752
+2024/06/19-13:57:35.302 61c Delete type=2 #1753
+2024/06/19-13:57:35.302 61c Delete type=2 #1754
+2024/06/19-13:57:35.302 61c Delete type=2 #1755
+2024/06/19-13:57:35.302 61c Delete type=2 #1756
+2024/06/19-13:57:35.303 61c Delete type=2 #1757
+2024/06/19-13:57:35.303 61c Delete type=2 #1758
+2024/06/19-13:57:35.303 61c Delete type=2 #1759
+2024/06/19-13:57:35.303 61c Delete type=2 #1764
+2024/06/19-13:57:38.684 4f80 Compacting 1@1 + 7@2 files
+2024/06/19-13:57:38.792 4f80 Generated table #1778@1: 23345 keys, 2181080 bytes
+2024/06/19-13:57:38.855 4f80 Generated table #1779@1: 8366 keys, 2132204 bytes
+2024/06/19-13:57:38.993 4f80 Generated table #1780@1: 85144 keys, 2231273 bytes
+2024/06/19-13:57:39.138 4f80 Generated table #1781@1: 96439 keys, 2244992 bytes
+2024/06/19-13:57:39.360 4f80 Generated table #1782@1: 96528 keys, 2245371 bytes
+2024/06/19-13:57:39.557 4f80 Generated table #1783@1: 96021 keys, 2244509 bytes
+2024/06/19-13:57:39.673 4f80 Generated table #1784@1: 55179 keys, 1299852 bytes
+2024/06/19-13:57:39.673 4f80 Compacted 1@1 + 7@2 files => 14579281 bytes
+2024/06/19-13:57:39.674 4f80 compacted to: files[ 0 0 19 0 0 0 0 ]
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1743
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1744
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1745
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1746
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1747
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1748
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1749
+2024/06/19-13:57:39.675 4f80 Delete type=2 #1765

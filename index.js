@@ -1,9 +1,9 @@
 const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const { GROUP_IDs } = require('./config/IDs');
+const { GROUP_IDs, imagePath } = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
-const qrcode = require("qrcode-terminal")
-
+const { sleep } = require("./helpers/sleep")
+const fs = require('fs');
 
 const run = async (event) => {
     const client = new Client({
@@ -33,13 +33,14 @@ const run = async (event) => {
 
     const cleanup = async () => {
         await client.destroy();
+        fs.unlinkSync(imagePath);  // Delete the file
         process.exit(0);
     }
 
     client.on('ready', async () => {
         console.log('Client is ready!');
 
-        const { previous, current: currentQuiz } = await getQuizData(0)
+        const { previous, current: currentQuiz } = await getQuizData(1)
 
         if (currentQuiz.code) {
             // Generate Quiz image
@@ -47,20 +48,20 @@ const run = async (event) => {
         }
 
         if (previous) {
-            await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, previous.answer)))
+            // TODO: send the previous answer as Quoted message using `quotedMessageId`, to do this, we need to store the message id, along with their associated group id
+            await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, "The answer is \n" + previous.answer)))
         }
 
         if (currentQuiz.code) {
-            const media = MessageMedia.fromFilePath("code-snippet.png")
+            const media = MessageMedia.fromFilePath(imagePath)
             await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, media, { caption: "Refer to this code." })))
         }
 
         await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }))))
 
-        setTimeout(
-            cleanup,
-            3000
-        )
+        await sleep()
+
+        setTimeout(() => cleanup(), 3000)
     });
 
     client.on('authenticated', () => {
