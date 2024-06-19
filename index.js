@@ -4,6 +4,7 @@ const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { sleep } = require("./helpers/sleep")
 const fs = require('fs');
+const { sendMessage, sendBulkMessages } = require('./helpers/messageSender');
 
 const run = async (event) => {
     const client = new Client({
@@ -49,15 +50,22 @@ const run = async (event) => {
 
         if (previous) {
             // TODO: send the previous answer as Quoted message using `quotedMessageId`, to do this, we need to store the message id, along with their associated group id
-            await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, "The answer is \n" + previous.answer)))
+            const previousQuizMessageId = ""
+            const result = await sendBulkMessages(client, "The answer is \n" + previous.answer, { quotedMessageId: previousQuizMessageId }, "TEXT")
+            console.log("Prev");
+            result.map((c) => console.log(c.id._serialized))
         }
 
         if (currentQuiz.code) {
             const media = MessageMedia.fromFilePath(imagePath)
-            await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, media, { caption: "Refer to this code." })))
+            const result = await sendBulkMessages(client, media, { caption: "Refer to this code." }, "IMAGE")
+            console.log("Code");
+            result.map((c) => console.log(c.id._serialized))
         }
 
-        await Promise.all(GROUP_IDs.map(gid => client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }))))
+        const result = await sendBulkMessages(client, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }), "QUIZ")
+        console.log("Quiz");
+        result.map((c) => console.log(c.id._serialized))
 
         await sleep()
 
@@ -72,13 +80,8 @@ const run = async (event) => {
         console.log('Client was logged out', reason);
     });
 
-    client.on("poll_vote", (reason) => {
-        console.log('Voted', reason);
-    });
-
     // Start the client
     client.initialize();
-
 
 };
 
