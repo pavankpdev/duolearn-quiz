@@ -1,3 +1,5 @@
-2024/06/19-14:53:20.563 4ec4 Reusing MANIFEST C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2024/06/19-14:53:20.565 4ec4 Recovering log #10
-2024/06/19-14:53:20.565 4ec4 Reusing old log C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\Local Storage\leveldb/000010.log 
+2024/06/19-22:56:05.204 b303 Reusing MANIFEST /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2024/06/19-22:56:05.208 b303 Recovering log #10
+2024/06/19-22:56:05.208 b303 Level-0 table #12: started
+2024/06/19-22:56:05.212 b303 Level-0 table #12: 13010 bytes OK
+2024/06/19-22:56:05.216 b303 Delete type=0 #10

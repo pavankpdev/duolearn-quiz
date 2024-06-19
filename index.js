@@ -5,6 +5,8 @@ const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { sleep } = require("./helpers/sleep")
 const fs = require('fs');
 const { sendMessage, sendBulkMessages } = require('./helpers/messageSender');
+const {writeToRedis, readFromRedis} = require("./config/upstash");
+const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
 
 const run = async (event) => {
     const client = new Client({
@@ -40,8 +42,8 @@ const run = async (event) => {
 
     client.on('ready', async () => {
         console.log('Client is ready!');
-
-        const { previous, current: currentQuiz } = await getQuizData(1)
+        const cursor = await getCurrentQuizCounter()
+        const { previous, current: currentQuiz } = await getQuizData(Number(cursor.result))
 
         if (currentQuiz.code) {
             // Generate Quiz image
@@ -49,24 +51,31 @@ const run = async (event) => {
         }
 
         if (previous) {
-            // TODO: send the previous answer as Quoted message using `quotedMessageId`, to do this, we need to store the message id, along with their associated group id
-            const previousQuizMessageId = ""
-            const result = await sendBulkMessages(client, "The answer is \n" + previous.answer, { quotedMessageId: previousQuizMessageId }, "TEXT")
-            console.log("Prev");
-            result.map((c) => console.log(c.id._serialized))
+            const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
+            const message = "The answer is \n" + previous.answer
+            await Promise.all(
+                GROUP_IDs.map((gid, index) => {
+                        console.log(`[PREVIOUS_ANSWER] ${gid} | ${message}`)
+                        return client.sendMessage(
+                            gid,
+                            message,
+                            { quotedMessageId: previousQuizMessageIds[index]?.result }
+                        )
+                    }
+                )
+            )
         }
 
         if (currentQuiz.code) {
             const media = MessageMedia.fromFilePath(imagePath)
-            const result = await sendBulkMessages(client, media, { caption: "Refer to this code." }, "IMAGE")
-            console.log("Code");
-            result.map((c) => console.log(c.id._serialized))
+            await sendBulkMessages(client, media, { caption: "Refer to this code." }, "IMAGE")
         }
 
-        const result = await sendBulkMessages(client, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }), "QUIZ")
-        console.log("Quiz");
-        result.map((c) => console.log(c.id._serialized))
-
+        const result = await sendBulkMessages(client, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }), null, "QUIZ")
+        await Promise.all(
+            result.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
+        )
+        await incrementQuizCounter()
         await sleep()
 
         setTimeout(() => cleanup(), 3000)

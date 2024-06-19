@@ -1,3 +1,26 @@
-2024/06/19-14:52:24.039 6ec8 Reusing MANIFEST C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2024/06/19-14:52:24.040 6ec8 Recovering log #1832
-2024/06/19-14:52:24.056 6ec8 Reusing old log C:\Users\PAZ3KOR\Documents\personal\wa-bot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001832.log 
+2024/06/19-22:55:08.952 9e03 Reusing MANIFEST /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/06/19-22:55:08.962 9e03 Recovering log #1965
+2024/06/19-22:55:08.985 9e03 Reusing old log /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001965.log 
+2024/06/19-22:55:21.958 9e03 Level-0 table #1990: started
+2024/06/19-22:55:21.976 9e03 Level-0 table #1990: 1034255 bytes OK
+2024/06/19-22:55:21.980 9e03 Delete type=0 #1965
+2024/06/19-22:55:21.982 9e03 Compacting 1@0 + 0@1 files
+2024/06/19-22:55:22.004 9e03 Generated table #1991@0: 20782 keys, 509313 bytes
+2024/06/19-22:55:22.008 9e03 Generated table #1992@0: 617 keys, 25545 bytes
+2024/06/19-22:55:22.008 9e03 Compacted 1@0 + 0@1 files => 534858 bytes
+2024/06/19-22:55:22.009 9e03 compacted to: files[ 0 2 18 0 0 0 0 ]
+2024/06/19-22:55:22.082 b603 Compacting 1@1 + 10@2 files
+2024/06/19-22:55:22.133 b603 Generated table #1993@1: 69127 keys, 2236789 bytes
+2024/06/19-22:55:22.179 b603 Generated table #1994@1: 46851 keys, 2201788 bytes
+2024/06/19-22:55:22.231 b603 Generated table #1995@1: 51903 keys, 2219814 bytes
+2024/06/19-22:55:22.254 b603 Generated table #1996@1: 2079 keys, 2145739 bytes
+2024/06/19-22:55:22.279 b603 Generated table #1997@1: 3426 keys, 2158017 bytes
+2024/06/19-22:55:22.302 b603 Generated table #1998@1: 2978 keys, 2154575 bytes
+2024/06/19-22:55:22.325 b603 Generated table #1999@1: 3338 keys, 2156027 bytes
+2024/06/19-22:55:22.354 b603 Generated table #2000@1: 9991 keys, 2167311 bytes
+2024/06/19-22:55:22.401 b603 Generated table #2001@1: 30116 keys, 2262971 bytes
+2024/06/19-22:55:22.445 b603 Generated table #2002@1: 25950 keys, 2246651 bytes
+2024/06/19-22:55:22.455 b603 Generated table #2003@1: 5053 keys, 178144 bytes
+2024/06/19-22:55:22.455 b603 Compacted 1@1 + 10@2 files => 22127826 bytes
+2024/06/19-22:55:22.456 b603 compacted to: files[ 0 1 19 0 0 0 0 ]
+2024/06/19-22:55:22.457 b603 Delete type=2 #1990
