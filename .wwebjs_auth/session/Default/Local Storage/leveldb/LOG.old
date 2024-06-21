@@ -1,3 +1,5 @@
-2024/06/19-22:55:06.989 b203 Reusing MANIFEST /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2024/06/19-22:55:06.992 b203 Recovering log #10
-2024/06/19-22:55:06.993 b203 Reusing old log /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/Local Storage/leveldb/000010.log 
+2024/06/21-16:52:18.856 8703 Reusing MANIFEST /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2024/06/21-16:52:18.861 8703 Recovering log #13
+2024/06/21-16:52:18.861 8703 Reusing old log /Volumes/Extreme SSD/Quiz-Automation-System/.wwebjs_auth/session/Default/Local Storage/leveldb/000013.log 
+2024/06/21-16:52:49.828 f703 Level-0 table #16: started
+2024/06/21-16:52:49.834 f703 Level-0 table #16: 15507 bytes OK

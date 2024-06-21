@@ -4,7 +4,6 @@ const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { sleep } = require("./helpers/sleep")
 const fs = require('fs');
-const { sendMessage, sendBulkMessages } = require('./helpers/messageSender');
 const {writeToRedis, readFromRedis} = require("./config/upstash");
 const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
 
@@ -45,7 +44,7 @@ const run = async (event) => {
         const cursor = await getCurrentQuizCounter()
         const { previous, current: currentQuiz } = await getQuizData(Number(cursor.result))
 
-        if (currentQuiz.code) {
+        if (currentQuiz?.code) {
             // Generate Quiz image
             await generateCodeSnippet(currentQuiz.code);
         }
@@ -54,26 +53,23 @@ const run = async (event) => {
             const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
             const message = "The answer is \n" + previous.answer
             await Promise.all(
-                GROUP_IDs.map((gid, index) => {
-                        console.log(`[PREVIOUS_ANSWER] ${gid} | ${message}`)
-                        return client.sendMessage(
-                            gid,
-                            message,
-                            { quotedMessageId: previousQuizMessageIds[index]?.result }
-                        )
-                    }
+                GROUP_IDs.map((gid, index) => client.sendMessage(
+                        gid,
+                        message,
+                        { quotedMessageId: previousQuizMessageIds[index]?.result }
+                    )
                 )
             )
         }
 
-        if (currentQuiz.code) {
+        if (currentQuiz?.code) {
             const media = MessageMedia.fromFilePath(imagePath)
-            await sendBulkMessages(client, media, { caption: "Refer to this code." }, "IMAGE")
+            await Promise.all(GROUP_IDs.map((gid) => client.sendMessage(gid, media, { caption: "Refer to this code." })))
         }
+        const results = await Promise.all(GROUP_IDs.map((gid) => client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }))))
 
-        const result = await sendBulkMessages(client, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }), null, "QUIZ")
         await Promise.all(
-            result.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
+            results.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
         )
         await incrementQuizCounter()
         await sleep()
