@@ -7,22 +7,25 @@ const fs = require('fs');
 const {writeToRedis, readFromRedis} = require("./config/upstash");
 const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
 var cron = require('node-cron');
+const {launch} = require("puppeteer");
 
 const run = async (event) => {
+    const browser = await launch({
+        headless: true,
+        executablePath: '/usr/bin/chromium-browser', // Specify the path to the Chromium executable
+        args: [
+            "--window-size=1300,1000",
+            "--disable-notifications",
+            "--disable-gpu",
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
+            "--force-device-scale-factor",
+            "--ignore-certificate-errors",
+        ]
+    });
     const client = new Client({
         puppeteer: {
-            headless: true,
-            ignoreHTTPSErrors: true,
-            args: [
-                "--window-size=1300,1000",
-                "--disable-notifications",
-                "--disable-gpu",
-                "--disable-setuid-sandbox",
-                "--force-device-scale-factor",
-                "--ignore-certificate-errors",
-                "--no-sandbox",
-            ],
-            defaultViewport: { width: 1300, height: 1000 },
+            browserWSEndpoint: browser.wsEndpoint(),
             headless: true,
         },
         webVersion: '2.2412.54v2',
