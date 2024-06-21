@@ -6,6 +6,7 @@ const { sleep } = require("./helpers/sleep")
 const fs = require('fs');
 const {writeToRedis, readFromRedis} = require("./config/upstash");
 const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
+var cron = require('node-cron');
 
 const run = async (event) => {
     const client = new Client({
@@ -90,4 +91,7 @@ const run = async (event) => {
 
 };
 
-run()
+cron.schedule('* * * * *', () => {
+    console.log('running a task every minute');
+    run()
+});
