@@ -17,6 +17,9 @@ dependencies:
   puppeteer:
     specifier: ^22.11.1
     version: 22.11.2
+  qrcode-terminal:
+    specifier: ^0.12.0
+    version: 0.12.0
   whatsapp-web.js:
     specifier: ^1.24.0
     version: 1.24.0
@@ -1175,6 +1178,11 @@ packages:
       - supports-color
       - typescript
       - utf-8-validate
+    dev: false
+
+  /qrcode-terminal@0.12.0:
+    resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
+    hasBin: true
     dev: false
 
   /queue-tick@1.0.1:

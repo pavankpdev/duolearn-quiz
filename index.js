@@ -2,51 +2,42 @@ const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const { GROUP_IDs, imagePath } = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
-const { sleep } = require("./helpers/sleep")
-const fs = require('fs');
 const {writeToRedis, readFromRedis} = require("./config/upstash");
 const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
-var cron = require('node-cron');
-const {launch} = require("puppeteer");
+const cron = require('node-cron');
+const qrcode = require('qrcode-terminal');
 
-const run = async (event) => {
-    const browser = await launch({
+
+const client = new Client({
+    puppeteer: {
         headless: true,
-        executablePath: '/usr/bin/chromium-browser', // Specify the path to the Chromium executable
+        ignoreHTTPSErrors: true,
         args: [
             "--window-size=1300,1000",
             "--disable-notifications",
             "--disable-gpu",
             "--disable-setuid-sandbox",
-            "--no-sandbox",
             "--force-device-scale-factor",
             "--ignore-certificate-errors",
-        ]
-    });
-    const client = new Client({
-        puppeteer: {
-            browserWSEndpoint: browser.wsEndpoint(),
-            headless: true,
-        },
-        webVersion: '2.2412.54v2',
-        webVersionCache: {
-            type: 'remote',
-            remotePath: 'https://raw.githubusercontent.com/guigo613/alternative-wa-version/main/html/2.2412.54v2.html'
-        },
+            "--no-sandbox",
+        ],
+        defaultViewport: { width: 1300, height: 1000 },
+    },
+    webVersion: '2.2412.54v2',
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/guigo613/alternative-wa-version/main/html/2.2412.54v2.html'
+    },
 
-        authStrategy: new LocalAuth()
-    });
+    authStrategy: new LocalAuth()
+});
 
-    const cleanup = async () => {
-        await client.destroy();
-        fs.unlinkSync(imagePath);  // Delete the file
-        process.exit(0);
-    }
-
-    client.on('ready', async () => {
-        console.log('Client is ready!');
+client.on('ready',  () => {
+    console.log('Client is ready!');
+    cron.schedule('* * * * *', async () => {
+        console.log('running a task every minute');
         const cursor = await getCurrentQuizCounter()
-        const { previous, current: currentQuiz } = await getQuizData(Number(cursor.result))
+        const { previous, current: currentQuiz } = await getQuizData(Number("1"))
 
         if (currentQuiz?.code) {
             // Generate Quiz image
@@ -60,7 +51,7 @@ const run = async (event) => {
                 GROUP_IDs.map((gid, index) => client.sendMessage(
                         gid,
                         message,
-                        { quotedMessageId: previousQuizMessageIds[index]?.result }
+                        previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
                     )
                 )
             )
@@ -76,25 +67,20 @@ const run = async (event) => {
             results.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
         )
         await incrementQuizCounter()
-        await sleep()
-
-        setTimeout(() => cleanup(), 3000)
     });
-
-    client.on('authenticated', () => {
-        console.log('Client authenticated!');
-    });
-
-    client.on('disconnected', (reason) => {
-        console.log('Client was logged out', reason);
-    });
-
-    // Start the client
-    client.initialize();
-
-};
-
-cron.schedule('* * * * *', () => {
-    console.log('running a task every minute');
-    run()
 });
+
+client.on("qr", (qr) => {
+    qrcode.generate(qr, {small: true});
+})
+
+client.on('authenticated', () => {
+    console.log('Client authenticated!');
+});
+
+client.on('disconnected', (reason) => {
+    console.log('Client was logged out', reason);
+});
+
+// Start the client
+client.initialize();
