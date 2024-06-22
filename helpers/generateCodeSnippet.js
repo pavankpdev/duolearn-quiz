@@ -31,7 +31,15 @@ const generateCodeSnippet = async (codeSnippet, language = "bash") => {
     </body>
     </html>`;
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            "--disable-notifications",
+            "--disable-setuid-sandbox",
+            "--ignore-certificate-errors",
+            "--no-sandbox",
+        ]
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
