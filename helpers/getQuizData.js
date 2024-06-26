@@ -47,7 +47,8 @@ const extractQuizComponents = (blocks) => {
     return components;
 };
 
-const getQuizData = async (cursor) => {
+const getQuizData = async () => {
+    const cursor = 1;
     const quizDbResults = await notion.databases.query({
         database_id: NOTION_QUIZ_DATABASE_ID,
         filter: {
@@ -83,13 +84,15 @@ const getQuizData = async (cursor) => {
 
         return {
             previous: previousQuizComponents,
-            current: currentQuizComponents
+            current: currentQuizComponents,
+            pageIdToBeMoved: previousQuizPageId
         }
     }
 
     return {
         previous: null,
-        current: currentQuizComponents
+        current: currentQuizComponents,
+        pageIdToBeMoved: currentQuizPageId
     }
 }
 

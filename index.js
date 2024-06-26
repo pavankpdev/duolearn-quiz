@@ -2,10 +2,11 @@ const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const { GROUP_IDs, imagePath } = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
-const {writeToRedis, readFromRedis} = require("./config/upstash");
-const {incrementQuizCounter, getCurrentQuizCounter} = require("./helpers/persistentStore");
+const { writeToRedis, readFromRedis } = require("./config/upstash");
+const { incrementQuizCounter, getCurrentQuizCounter } = require("./helpers/persistentStore");
 const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
+const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
 
 
 const client = new Client({
@@ -32,12 +33,11 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-client.on('ready',  () => {
+client.on('ready', () => {
     console.log('Client is ready!');
     cron.schedule('* * * * *', async () => {
         console.log('running a task every minute');
-        const cursor = await getCurrentQuizCounter()
-        const { previous, current: currentQuiz } = await getQuizData(Number("1"))
+        const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
 
         if (currentQuiz?.code) {
             // Generate Quiz image
@@ -49,10 +49,10 @@ client.on('ready',  () => {
             const message = "The answer is \n" + previous.answer
             await Promise.all(
                 GROUP_IDs.map((gid, index) => client.sendMessage(
-                        gid,
-                        message,
-                        previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                    )
+                    gid,
+                    message,
+                    previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+                )
                 )
             )
         }
@@ -66,9 +66,13 @@ client.on('ready',  () => {
         await Promise.all(
             results.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
         )
-        await incrementQuizCounter()
+        await moveQuizStatusToDone(pageIdToBeMoved);
     });
 });
+
+client.on("qr", (qr) => {
+    qrcode.generate(qr, { small: true });
+})
 
 client.on('authenticated', () => {
     console.log('Client authenticated!');
