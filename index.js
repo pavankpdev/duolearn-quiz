@@ -7,6 +7,7 @@ const { writeToRedis, readFromRedis } = require("./config/upstash");
 const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
+const { sendAMessageToDiscord, postPollToDiscord } = require("./helpers/discord");
 
 const client = new Client({
     puppeteer: {
@@ -32,6 +33,8 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
+// FIXME: since, we're returning array of async tasks, the order of the message has turned to random, which would be against the requirement
+
 client.on('ready', () => {
     console.log('Client is ready!');
     cron.schedule('* * * * *', async () => {
@@ -47,21 +50,41 @@ client.on('ready', () => {
             const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
             const message = "The answer is \n" + previous.answer
             await Promise.all(
-                GROUP_IDs.map((gid, index) => client.sendMessage(
-                    gid,
-                    message,
-                    previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                )
-                )
+                GROUP_IDs.map((gid, index) => {
+                    return [
+                        client.sendMessage(
+                            gid,
+                            message,
+                            previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+                        ),
+                        // TODO: attach reply message referrence 
+                        sendAMessageToDiscord(message)
+                    ]
+                })
             )
         }
 
         if (currentQuiz?.code) {
             const media = MessageMedia.fromFilePath(imagePath)
-            await Promise.all(GROUP_IDs.map((gid) => client.sendMessage(gid, media, { caption: "Refer to this code." })))
+            await Promise.all(GROUP_IDs.map((gid) => {
+                return [
+                    client.sendMessage(gid, media, { caption: "Refer to this code." }),
+                    // TODO: format to codesnippet
+                    sendAMessageToDiscord(currentQuiz?.code)
+                ]
+            }))
         }
-        const results = await Promise.all(GROUP_IDs.map((gid) => client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }))))
+        const results = await Promise.all(GROUP_IDs.map((gid) => {
+            return [
+                client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false })),
+                postPollToDiscord({
+                    question: currentQuiz.question,
+                    options: currentQuiz.options
+                })
+            ]
+        }))
 
+        // TODO: store discord message id.
         await Promise.all(
             results.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
         )
