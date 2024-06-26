@@ -49,40 +49,36 @@ client.on('ready', () => {
         if (previous) {
             const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
             const message = "The answer is \n" + previous.answer
-            await Promise.all(
-                GROUP_IDs.map((gid, index) => {
-                    return [
-                        client.sendMessage(
-                            gid,
-                            message,
-                            previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                        ),
-                        // TODO: attach reply message referrence 
-                        sendAMessageToDiscord(message)
-                    ]
-                })
-            )
+            for (let index = 0; index < GROUP_IDs.length; index++) {
+                const gid = GROUP_IDs[index];
+                await client.sendMessage(
+                    gid,
+                    message,
+                    previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+                );
+                // TODO: attach reply message referrence
+                await sendAMessageToDiscord({content: message})
+            }
         }
 
         if (currentQuiz?.code) {
             const media = MessageMedia.fromFilePath(imagePath)
-            await Promise.all(GROUP_IDs.map((gid) => {
-                return [
-                    client.sendMessage(gid, media, { caption: "Refer to this code." }),
-                    // TODO: format to codesnippet
-                    sendAMessageToDiscord(currentQuiz?.code)
-                ]
-            }))
+            for (let index = 0; index < GROUP_IDs.length; index++) {
+                const gid = GROUP_IDs[index];
+                await client.sendMessage(gid, media, { caption: "Refer to this code." });
+                // TODO: format to codesnippet and tag @everyone
+                await sendAMessageToDiscord({content: currentQuiz?.code})
+            }
         }
-        const results = await Promise.all(GROUP_IDs.map((gid) => {
-            return [
-                client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false })),
-                postPollToDiscord({
-                    question: currentQuiz.question,
-                    options: currentQuiz.options
-                })
-            ]
-        }))
+
+        for (let index = 0; index < GROUP_IDs.length; index++) {
+            const gid = GROUP_IDs[index];
+            await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false })),
+            await postPollToDiscord({
+                question: currentQuiz.question,
+                options: currentQuiz.options
+            })
+        }
 
         // TODO: store discord message id.
         await Promise.all(

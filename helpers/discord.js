@@ -7,12 +7,12 @@ const get24HoursExpiryTimestamp = (hours = 24) => {
     return expiryDate.toISOString();
 }
 
-const sendMessage = async (content) => {
+const sendAMessageToDiscord = async (options) => {
     const url = `${DISCORD_API_ORIGIN}/channels/936995526115733524/messages`
     return axios({
         method: "POST",
         url,
-        data: content,
+        data: options,
         headers: {
             Authorization: `Bot ${DISCORD_TOKEN}`,
             'Content-Type': 'application/json; charset=UTF-8',
@@ -21,7 +21,7 @@ const sendMessage = async (content) => {
 }
 
 const postPollToDiscord = async (pollObject) => {
-    return sendMessage({
+    return sendAMessageToDiscord({
         poll: {
             question: {
                 text: pollObject?.question
@@ -37,10 +37,6 @@ const postPollToDiscord = async (pollObject) => {
             layout_type: 1
         }
     })
-}
-
-const sendAMessageToDiscord = async (message) => {
-    return sendMessage({ content: message })
 }
 
 module.exports = {
