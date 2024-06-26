@@ -1,9 +1,9 @@
+require("dotenv").config()
 const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const { GROUP_IDs, imagePath } = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { writeToRedis, readFromRedis } = require("./config/upstash");
-const { incrementQuizCounter, getCurrentQuizCounter } = require("./helpers/persistentStore");
 const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');

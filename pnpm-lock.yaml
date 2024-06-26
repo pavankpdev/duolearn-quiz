@@ -11,6 +11,9 @@ importers:
       '@notionhq/client':
         specifier: ^2.2.15
         version: 2.2.15
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
@@ -277,6 +280,10 @@ packages:
 
   devtools-protocol@0.0.1299070:
     resolution: {integrity: sha512-+qtL3eX50qsJ7c+qVyagqi7AWMoQCBGNfoyJZMwm/NSXVqLYbuitrWEEIzxfUmTNy7//Xe8yhMmQ+elj3uAqSg==}
+
+  dotenv@16.4.5:
+    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+    engines: {node: '>=12'}
 
   duplexer2@0.1.4:
     resolution: {integrity: sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA==}
@@ -1117,6 +1124,8 @@ snapshots:
   devtools-protocol@0.0.1045489: {}
 
   devtools-protocol@0.0.1299070: {}
+
+  dotenv@16.4.5: {}
 
   duplexer2@0.1.4:
     dependencies:
