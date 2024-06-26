@@ -11,7 +11,8 @@ const {
     UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN,
     QUIZ_COUNTER,
-    DISCORD_TOKEN
+    DISCORD_TOKEN,
+    DISCORD_CHANNEL_ID
 } = process.env;
 
 module.exports = {
@@ -23,5 +24,6 @@ module.exports = {
     UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN,
     QUIZ_COUNTER,
-    DISCORD_TOKEN
+    DISCORD_TOKEN,
+    DISCORD_CHANNEL_ID
 }

@@ -1,6 +1,6 @@
 require("dotenv").config()
 const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const { GROUP_IDs, imagePath } = require('./config/IDs');
+const { GROUP_IDs, imagePath, DISCORD_CHANNEL_ID} = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { writeToRedis, readFromRedis } = require("./config/upstash");
@@ -33,8 +33,6 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-// FIXME: since, we're returning array of async tasks, the order of the message has turned to random, which would be against the requirement
-
 client.on('ready', () => {
     console.log('Client is ready!');
     cron.schedule('* * * * *', async () => {
@@ -48,6 +46,8 @@ client.on('ready', () => {
 
         if (previous) {
             const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
+            const previousDiscordQuizMessageId = await readFromRedis(DISCORD_CHANNEL_ID)
+
             const message = "The answer is \n" + previous.answer
             for (let index = 0; index < GROUP_IDs.length; index++) {
                 const gid = GROUP_IDs[index];
@@ -56,8 +56,13 @@ client.on('ready', () => {
                     message,
                     previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
                 );
-                // TODO: attach reply message referrence
-                await sendAMessageToDiscord({content: message})
+
+                await sendAMessageToDiscord({
+                    content: message,
+                    message_reference: {
+                        message_id: previousDiscordQuizMessageId ?? '1255556687268413563'
+                    }
+                })
             }
         }
 
@@ -66,24 +71,34 @@ client.on('ready', () => {
             for (let index = 0; index < GROUP_IDs.length; index++) {
                 const gid = GROUP_IDs[index];
                 await client.sendMessage(gid, media, { caption: "Refer to this code." });
-                // TODO: format to codesnippet and tag @everyone
-                await sendAMessageToDiscord({content: currentQuiz?.code})
+                const formattedCode = `
+                    \`\`\`
+                    ${currentQuiz?.code}
+                    \`\`\`
+                `
+                await sendAMessageToDiscord({content: formattedCode})
             }
         }
 
         for (let index = 0; index < GROUP_IDs.length; index++) {
             const gid = GROUP_IDs[index];
-            await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false })),
-            await postPollToDiscord({
+            const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
+            const poll = await postPollToDiscord({
                 question: currentQuiz.question,
                 options: currentQuiz.options
             })
+
+            await sendAMessageToDiscord({
+                content: "@everyone quiz of the day",
+                message_reference: {
+                    message_id: poll.data.id
+                }
+            })
+
+            await writeToRedis(gid, message.id._serialized)
+            await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
         }
 
-        // TODO: store discord message id.
-        await Promise.all(
-            results.map((c, index) => writeToRedis(GROUP_IDs[index], c.id._serialized))
-        )
         await moveQuizStatusToDone(pageIdToBeMoved);
     });
 });
@@ -102,3 +117,20 @@ client.on('disconnected', (reason) => {
 
 // Start the client
 client.initialize();
+
+
+// const ff = async () => {
+//     const poll = await postPollToDiscord({
+//         question: "currentQuiz.question",
+//         options: ["currentQuiz.options", "qeqeq"]
+//     })
+//
+//     await sendAMessageToDiscord({
+//         content: "@everyone This is the quiz yoooooo",
+//         message_reference: {
+//             message_id: poll.data.id
+//         }
+//     })
+// }
+//
+// ff()
