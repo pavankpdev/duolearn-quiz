@@ -20,18 +20,8 @@ const writeToRedis = async (key, value) => {
     return res.json()
 }
 
-const incrValueInRedis = async (key) => {
-    const res = await fetch(`${UPSTASH_REDIS_REST_URL}/incr/${key}`, {
-        headers: {
-            Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`
-        }
-    })
-
-    return res.json()
-}
 
 module.exports = {
     readFromRedis,
-    writeToRedis,
-    incrValueInRedis
+    writeToRedis
 }

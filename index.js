@@ -8,7 +8,6 @@ const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
 
-
 const client = new Client({
     puppeteer: {
         headless: true,
