@@ -7,7 +7,8 @@ const { writeToRedis, readFromRedis } = require("./config/upstash");
 const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
-const { sendAMessageToDiscord, postPollToDiscord } = require("./helpers/discord");
+const { sendAMessageToDiscord, postPollToDiscord, getDiscordMessageById} = require("./helpers/discord");
+const {preloadMessages} = require("./helpers/preloadMessages");
 
 const client = new Client({
     puppeteer: {
@@ -35,8 +36,8 @@ const client = new Client({
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    cron.schedule('* * * * *', async () => {
-        console.log('running a task every minute');
+    console.log('running a task every minute');
+    cron.schedule("30 4 * * *", async () => {
         try {
             const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
 
@@ -52,17 +53,33 @@ client.on('ready', () => {
                 const message = "The answer is \n" + previous.answer
                 for (let index = 0; index < GROUP_IDs.length; index++) {
                     const gid = GROUP_IDs[index];
-                    await client.sendMessage(
-                        gid,
-                        message,
-                        previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                    );
+                    const messageId = previousQuizMessageIds[index]?.result
 
+                    try {
+                        await client.getMessageById(messageId)
+                        await client.sendMessage(
+                            gid,
+                            message,
+                            previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+                        );
+                    } catch (err) {
+                        await client.sendMessage(
+                            gid,
+                            message
+                        )
+                    }
+                }
+
+                if(previousDiscordQuizMessageId?.result) {
                     await sendAMessageToDiscord({
                         content: message,
                         message_reference: {
-                            message_id: previousDiscordQuizMessageId ?? '1255556687268413563'
+                            message_id: previousDiscordQuizMessageId?.result
                         }
+                    })
+                } else {
+                    await sendAMessageToDiscord({
+                        content: message,
                     })
                 }
             }
@@ -72,35 +89,41 @@ client.on('ready', () => {
                 for (let index = 0; index < GROUP_IDs.length; index++) {
                     const gid = GROUP_IDs[index];
                     await client.sendMessage(gid, media, { caption: "Refer to this code." });
-                    const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
-                    await sendAMessageToDiscord({content: formattedCode})
                 }
+                const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
+                await sendAMessageToDiscord({content: formattedCode})
             }
 
             for (let index = 0; index < GROUP_IDs.length; index++) {
                 const gid = GROUP_IDs[index];
                 const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
-                const poll = await postPollToDiscord({
-                    question: currentQuiz.question,
-                    options: currentQuiz.options
-                })
-
-                await sendAMessageToDiscord({
-                    content: "@everyone quiz of the day",
-                    message_reference: {
-                        message_id: poll.data.id
-                    }
-                })
-
                 await writeToRedis(gid, message.id._serialized)
-                await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
             }
 
+            const poll = await postPollToDiscord({
+                question: currentQuiz.question,
+                options: currentQuiz.options.map((a) => a.slice(3))
+            })
+
+            await sendAMessageToDiscord({
+                content: "@everyone quiz of the day",
+                message_reference: {
+                    message_id: poll.data.id
+                }
+            })
+            await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
             await moveQuizStatusToDone(pageIdToBeMoved);
         } catch (err) {
-            console.log(err)
+            console.log(JSON.stringify(err, null, 2))
         }
-    });
+        // client.getContacts().then((contacts) => {
+        //     contacts.map((c) => {
+        //         if(c.isGroup && c.name.includes("DuoLearn")) {
+        //             console.log(c.id._serialized, c.name)
+        //         }
+        //     })
+        // })
+    })
 });
 
 client.on("qr", (qr) => {

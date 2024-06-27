@@ -1,5 +1,18 @@
 const axios = require("axios")
-const { DISCORD_API_ORIGIN, DISCORD_TOKEN } = require("../config/IDs")
+const { DISCORD_API_ORIGIN, DISCORD_TOKEN, DISCORD_CHANNEL_ID } = require("../config/IDs")
+
+const requestDiscordAPI = async (options) => {
+    const {path, ...requestOptions} = options
+    const url = `${DISCORD_API_ORIGIN}/channels/${DISCORD_CHANNEL_ID}/${options?.path}`
+    return axios({
+        url,
+        headers: {
+            Authorization: `Bot ${DISCORD_TOKEN}`,
+            'Content-Type': 'application/json; charset=UTF-8',
+        },
+        ...requestOptions
+    })
+}
 
 const get24HoursExpiryTimestamp = (hours = 24) => {
     const now = new Date();
@@ -8,15 +21,10 @@ const get24HoursExpiryTimestamp = (hours = 24) => {
 }
 
 const sendAMessageToDiscord = async (options) => {
-    const url = `${DISCORD_API_ORIGIN}/channels/936995526115733524/messages`
-    return axios({
+    return requestDiscordAPI({
+        path: "/messages",
         method: "POST",
-        url,
         data: options,
-        headers: {
-            Authorization: `Bot ${DISCORD_TOKEN}`,
-            'Content-Type': 'application/json; charset=UTF-8',
-        }
     })
 }
 
@@ -39,7 +47,15 @@ const postPollToDiscord = async (pollObject) => {
     })
 }
 
+const getDiscordMessageById = async (mid) => {
+    return requestDiscordAPI({
+        path: `/messages/${mid}`,
+        method: "GET",
+    })
+}
+
 module.exports = {
     postPollToDiscord,
-    sendAMessageToDiscord
+    sendAMessageToDiscord,
+    getDiscordMessageById
 }

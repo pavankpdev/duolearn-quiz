@@ -1,5 +1,7 @@
 const GROUP_IDs = [
-    "919686855796@c.us",
+    "120363024352793011@g.us",
+    "120363029131273696@g.us",
+    "120363030881044093@g.us",
 ]
 
 const DISCORD_API_ORIGIN = "https://discord.com/api/v10"
