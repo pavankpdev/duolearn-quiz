@@ -37,69 +37,69 @@ client.on('ready', () => {
     console.log('Client is ready!');
     cron.schedule('* * * * *', async () => {
         console.log('running a task every minute');
-        const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
+        try {
+            const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
 
-        if (currentQuiz?.code) {
-            // Generate Quiz image
-            await generateCodeSnippet(currentQuiz.code);
-        }
+            if (currentQuiz?.code) {
+                // Generate Quiz image
+                await generateCodeSnippet(currentQuiz.code);
+            }
 
-        if (previous) {
-            const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
-            const previousDiscordQuizMessageId = await readFromRedis(DISCORD_CHANNEL_ID)
+            if (previous) {
+                const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
+                const previousDiscordQuizMessageId = await readFromRedis(DISCORD_CHANNEL_ID)
 
-            const message = "The answer is \n" + previous.answer
+                const message = "The answer is \n" + previous.answer
+                for (let index = 0; index < GROUP_IDs.length; index++) {
+                    const gid = GROUP_IDs[index];
+                    await client.sendMessage(
+                        gid,
+                        message,
+                        previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+                    );
+
+                    await sendAMessageToDiscord({
+                        content: message,
+                        message_reference: {
+                            message_id: previousDiscordQuizMessageId ?? '1255556687268413563'
+                        }
+                    })
+                }
+            }
+
+            if (currentQuiz?.code) {
+                const media = MessageMedia.fromFilePath(imagePath)
+                for (let index = 0; index < GROUP_IDs.length; index++) {
+                    const gid = GROUP_IDs[index];
+                    await client.sendMessage(gid, media, { caption: "Refer to this code." });
+                    const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
+                    await sendAMessageToDiscord({content: formattedCode})
+                }
+            }
+
             for (let index = 0; index < GROUP_IDs.length; index++) {
                 const gid = GROUP_IDs[index];
-                await client.sendMessage(
-                    gid,
-                    message,
-                    previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                );
+                const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
+                const poll = await postPollToDiscord({
+                    question: currentQuiz.question,
+                    options: currentQuiz.options
+                })
 
                 await sendAMessageToDiscord({
-                    content: message,
+                    content: "@everyone quiz of the day",
                     message_reference: {
-                        message_id: previousDiscordQuizMessageId ?? '1255556687268413563'
+                        message_id: poll.data.id
                     }
                 })
+
+                await writeToRedis(gid, message.id._serialized)
+                await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
             }
+
+            await moveQuizStatusToDone(pageIdToBeMoved);
+        } catch (err) {
+            console.log(err)
         }
-
-        if (currentQuiz?.code) {
-            const media = MessageMedia.fromFilePath(imagePath)
-            for (let index = 0; index < GROUP_IDs.length; index++) {
-                const gid = GROUP_IDs[index];
-                await client.sendMessage(gid, media, { caption: "Refer to this code." });
-                const formattedCode = `
-                    \`\`\`
-                    ${currentQuiz?.code}
-                    \`\`\`
-                `
-                await sendAMessageToDiscord({content: formattedCode})
-            }
-        }
-
-        for (let index = 0; index < GROUP_IDs.length; index++) {
-            const gid = GROUP_IDs[index];
-            const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
-            const poll = await postPollToDiscord({
-                question: currentQuiz.question,
-                options: currentQuiz.options
-            })
-
-            await sendAMessageToDiscord({
-                content: "@everyone quiz of the day",
-                message_reference: {
-                    message_id: poll.data.id
-                }
-            })
-
-            await writeToRedis(gid, message.id._serialized)
-            await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
-        }
-
-        await moveQuizStatusToDone(pageIdToBeMoved);
     });
 });
 
@@ -118,19 +118,3 @@ client.on('disconnected', (reason) => {
 // Start the client
 client.initialize();
 
-
-// const ff = async () => {
-//     const poll = await postPollToDiscord({
-//         question: "currentQuiz.question",
-//         options: ["currentQuiz.options", "qeqeq"]
-//     })
-//
-//     await sendAMessageToDiscord({
-//         content: "@everyone This is the quiz yoooooo",
-//         message_reference: {
-//             message_id: poll.data.id
-//         }
-//     })
-// }
-//
-// ff()
