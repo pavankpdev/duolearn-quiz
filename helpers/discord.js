@@ -3,7 +3,7 @@ const { DISCORD_API_ORIGIN, DISCORD_TOKEN, DISCORD_CHANNEL_ID } = require("../co
 
 const requestDiscordAPI = async (options) => {
     const {path, ...requestOptions} = options
-    const url = `${DISCORD_API_ORIGIN}/channels/${DISCORD_CHANNEL_ID}/${options?.path}`
+    const url = `${DISCORD_API_ORIGIN}/channels/${DISCORD_CHANNEL_ID}${options?.path}`
     return axios({
         url,
         headers: {

@@ -71,12 +71,19 @@ client.on('ready', () => {
                 }
 
                 if(previousDiscordQuizMessageId?.result) {
-                    await sendAMessageToDiscord({
-                        content: message,
-                        message_reference: {
-                            message_id: previousDiscordQuizMessageId?.result
-                        }
-                    })
+                    try {
+                        await getDiscordMessageById(previousDiscordQuizMessageId?.result);
+                        await sendAMessageToDiscord({
+                            content: message,
+                            message_reference: {
+                                message_id: previousDiscordQuizMessageId?.result
+                            }
+                        })
+                    } catch (err) {
+                        await sendAMessageToDiscord({
+                            content: message,
+                        })
+                    }
                 } else {
                     await sendAMessageToDiscord({
                         content: message,
@@ -111,7 +118,7 @@ client.on('ready', () => {
                     message_id: poll.data.id
                 }
             })
-            await writeToRedis(DISCORD_CHANNEL_ID, poll.data.id)
+            await writeToRedis(DISCORD_CHANNEL_ID, `${poll.data.id}`)
             await moveQuizStatusToDone(pageIdToBeMoved);
         } catch (err) {
             console.log(JSON.stringify(err, null, 2))
