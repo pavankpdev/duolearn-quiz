@@ -23,7 +23,7 @@ const extractQuizComponents = (blocks) => {
                 break;
             case 'code':
                 if (currentSection === 'code') {
-                    components.code = block.code.rich_text[0].plain_text;
+                    components.code = block.code.rich_text.length > 0 ? block.code.rich_text[0].plain_text : "";
                 }
                 break;
             case 'paragraph':

@@ -34,7 +34,7 @@ const client = new Client({
 client.on('ready', () => {
     console.log('Client is ready!');
     console.log('running a task every minute');
-    cron.schedule("30 4 * * *", async () => {
+    cron.schedule("* * * * *", async () => {
         try {
             const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
 
@@ -88,6 +88,7 @@ client.on('ready', () => {
                 }
             }
 
+            console.log(currentQuiz?.code)
             if (currentQuiz?.code) {
                 const media = MessageMedia.fromFilePath(imagePath)
                 for (let index = 0; index < GROUP_IDs.length; index++) {
@@ -118,6 +119,7 @@ client.on('ready', () => {
             await writeToRedis(DISCORD_CHANNEL_ID, `${poll.data.id}`)
             await moveQuizStatusToDone(pageIdToBeMoved);
         } catch (err) {
+            console.log(err)
             console.log(JSON.stringify(err, null, 2))
         }
         // client.getContacts().then((contacts) => {
