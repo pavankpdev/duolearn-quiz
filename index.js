@@ -1,14 +1,14 @@
 require("dotenv").config()
 const { Client, Poll, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const { GROUP_IDs, imagePath, DISCORD_CHANNEL_ID} = require('./config/IDs');
+const { GROUP_IDs, imagePath, DISCORD_CHANNEL_ID } = require('./config/IDs');
 const { getQuizData } = require('./helpers/getQuizData');
 const { generateCodeSnippet } = require('./helpers/generateCodeSnippet');
 const { writeToRedis, readFromRedis } = require("./config/upstash");
 const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
-const { sendAMessageToDiscord, postPollToDiscord, getDiscordMessageById} = require("./helpers/discord");
-const {preloadMessages} = require("./helpers/preloadMessages");
+const { sendAMessageToDiscord, postPollToDiscord, getDiscordMessageById } = require("./helpers/discord");
+const { preloadMessages } = require("./helpers/preloadMessages");
 
 const client = new Client({
     puppeteer: {
@@ -25,19 +25,16 @@ const client = new Client({
         ],
         defaultViewport: { width: 1300, height: 1000 },
     },
-    webVersion: '2.2412.54v2',
     webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/guigo613/alternative-wa-version/main/html/2.2412.54v2.html'
+        type: 'local'
     },
-
     authStrategy: new LocalAuth()
 });
 
 client.on('ready', () => {
     console.log('Client is ready!');
     console.log('running a task every minute');
-    cron.schedule("30 4 * * *", async () => {
+    cron.schedule("* * * * *", async () => {
         try {
             const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
 
@@ -70,7 +67,7 @@ client.on('ready', () => {
                     }
                 }
 
-                if(previousDiscordQuizMessageId?.result) {
+                if (previousDiscordQuizMessageId?.result) {
                     try {
                         await getDiscordMessageById(previousDiscordQuizMessageId?.result);
                         await sendAMessageToDiscord({
@@ -91,6 +88,7 @@ client.on('ready', () => {
                 }
             }
 
+            console.log(currentQuiz?.code)
             if (currentQuiz?.code) {
                 const media = MessageMedia.fromFilePath(imagePath)
                 for (let index = 0; index < GROUP_IDs.length; index++) {
@@ -98,7 +96,7 @@ client.on('ready', () => {
                     await client.sendMessage(gid, media, { caption: "Refer to this code." });
                 }
                 const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
-                await sendAMessageToDiscord({content: formattedCode})
+                await sendAMessageToDiscord({ content: formattedCode })
             }
 
             for (let index = 0; index < GROUP_IDs.length; index++) {
@@ -121,6 +119,7 @@ client.on('ready', () => {
             await writeToRedis(DISCORD_CHANNEL_ID, `${poll.data.id}`)
             await moveQuizStatusToDone(pageIdToBeMoved);
         } catch (err) {
+            console.log(err)
             console.log(JSON.stringify(err, null, 2))
         }
         // client.getContacts().then((contacts) => {
