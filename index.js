@@ -36,7 +36,7 @@ client.on('ready', () => {
     console.log('running a task every minute');
     cron.schedule("* * * * *", async () => {
         try {
-            const { previous, current: currentQuiz, pageIdToBeMoved } = await getQuizData()
+            const { previous, current: currentQuiz, answer } = await getQuizData()
 
             if (currentQuiz?.code) {
                 // Generate Quiz image
@@ -88,7 +88,6 @@ client.on('ready', () => {
                 }
             }
 
-            console.log(currentQuiz?.code)
             if (currentQuiz?.code) {
                 const media = MessageMedia.fromFilePath(imagePath)
                 for (let index = 0; index < GROUP_IDs.length; index++) {
@@ -142,6 +141,10 @@ client.on('authenticated', () => {
 
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
+});
+
+client.on('vote_update', (vote) => {
+    console.log(vote);
 });
 
 // Start the client

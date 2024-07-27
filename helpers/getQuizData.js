@@ -85,17 +85,18 @@ const getQuizData = async () => {
         return {
             previous: previousQuizComponents,
             current: currentQuizComponents,
-            pageIdToBeMoved: previousQuizPageId
+            pageIdToBeMoved: previousQuizPageId,
+            answer: currentQuizComponents.answer
         }
     }
 
     return {
         previous: null,
         current: currentQuizComponents,
-        pageIdToBeMoved: currentQuizPageId
+        pageIdToBeMoved: currentQuizPageId,
+        answer: currentQuizComponents.answer
     }
 }
 
 module.exports = { getQuizData }
-
 
