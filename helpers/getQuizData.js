@@ -19,7 +19,7 @@ const extractQuizComponents = (blocks) => {
     blocks.forEach(block => {
         switch (block.type) {
             case 'heading_3':
-                currentSection = block.heading_3.rich_text[0].plain_text.toLowerCase();
+                currentSection = block.heading_3.rich_text.length > 0 ? block.heading_3.rich_text[0].plain_text.toLowerCase() : "";
                 break;
             case 'code':
                 if (currentSection === 'code') {
