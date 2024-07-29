@@ -8,7 +8,12 @@ const cron = require('node-cron');
 const qrcode = require('qrcode-terminal');
 const { moveQuizStatusToDone } = require('./helpers/updateQuizStatus');
 const { sendAMessageToDiscord, postPollToDiscord, getDiscordMessageById } = require("./helpers/discord");
-const { preloadMessages } = require("./helpers/preloadMessages");
+const {saveAnswer, incrementPointLeaderBoard, saveVoteHistory, getCurrentLeaderBoard, getAnswerByMessageId, removeVoteHistory,
+    getVoteHistory,
+    decrementPointLeaderBoard
+} = require("./helpers/dbOperations");
+const {pgClient} = require("./config/pg");
+
 
 const client = new Client({
     puppeteer: {
@@ -33,10 +38,48 @@ const client = new Client({
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    console.log('running a task every minute');
-    cron.schedule("* * * * *", async () => {
+    // client.getContacts().then((contacts) => {
+    //     contacts.map((c) => {
+    //         if(c.isGroup && c.name.includes("Test")) {
+    //             console.log(c.id._serialized, c.name)
+    //         }
+    //     })
+    // })
+
+    cron.schedule("5 4 * * 1", async () => {
+        for (let index = 0; index < GROUP_IDs.length; index++) {
+            const gid = GROUP_IDs[index];
+
+            const leaderBoard = await getCurrentLeaderBoard(gid)
+            const placeEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+            const leaderboardMessage = `
+🏆 *Duolearn Leaderboard Update!* 🏆
+The top performers of the week.
+Let’s give a huge round of applause! 👏
+
+${leaderBoard.rows.map((leader, index) => {
+                return (`${placeEmojis[index]} *${index + 1}st Place:* 
+${leader.candidate_id} - ${leader.points} points`)
+            }).join('\n')}
+
+Keep answering quizzes every day to earn more points and Duolearn rewards in the future! 🌟
+
+Stay motivated and keep learning! 🚀📚
+       `;
+            await client.sendMessage(
+                gid,
+                leaderboardMessage,
+                {
+                    mentions: leaderBoard.rows.map((leader) => leader?.candidate_id)
+                }
+            )
+        }
+    })
+
+    cron.schedule("30 4 * * *", async () => {
         try {
-            const { previous, current: currentQuiz, answer } = await getQuizData()
+            const { previous, current: currentQuiz, answer, pageIdToBeMoved } = await getQuizData()
 
             if (currentQuiz?.code) {
                 // Generate Quiz image
@@ -102,6 +145,12 @@ client.on('ready', () => {
                 const gid = GROUP_IDs[index];
                 const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
                 await writeToRedis(gid, message.id._serialized)
+                const options = ['a', 'b', 'c', 'd'];
+                await saveAnswer(
+                    message.id._serialized,
+                    options.findIndex((ops) => ops === answer.slice(0, 1).toLocaleLowerCase()),
+                    gid
+                )
             }
 
             const poll = await postPollToDiscord({
@@ -121,13 +170,7 @@ client.on('ready', () => {
             console.log(err)
             console.log(JSON.stringify(err, null, 2))
         }
-        // client.getContacts().then((contacts) => {
-        //     contacts.map((c) => {
-        //         if(c.isGroup && c.name.includes("DuoLearn")) {
-        //             console.log(c.id._serialized, c.name)
-        //         }
-        //     })
-        // })
+
     })
 });
 
@@ -143,10 +186,56 @@ client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
 });
 
-client.on('vote_update', (vote) => {
-    console.log(vote);
+
+client.on('vote_update', async (vote) => {
+    const {voter} = vote
+    const selectedAnswer = vote.selectedOptions.length === 1 ? vote.selectedOptions[0].localId : null;
+    const messageId = vote.parentMessage.id._serialized;
+    const groupId = vote.parentMessage.to
+
+    const voteHistory = await getVoteHistory(messageId, voter)
+
+    if(selectedAnswer === null) {
+        if(voteHistory.rows.some((res) => res.is_passed)) {
+            await decrementPointLeaderBoard(voter, groupId)
+        }
+        await removeVoteHistory(messageId, voter)
+        return
+    }
+
+    const answerResult = await getAnswerByMessageId(messageId);
+
+    const isAnswerCorrect = answerResult.rows.some((ans) => Number(ans?.answer) === selectedAnswer)
+
+    if(isAnswerCorrect) {
+        if(voteHistory.rows.length > 0) {
+            await removeVoteHistory(messageId, voter)
+        }
+        await incrementPointLeaderBoard(voter, groupId)
+    } else {
+        if(voteHistory.rows.length > 0) {
+            if(voteHistory.rows.some((res) => res.is_passed)) {
+                await decrementPointLeaderBoard(voter, groupId)
+            }
+
+            await removeVoteHistory(messageId, voter)
+        }
+    }
+
+    await saveVoteHistory(
+        messageId,
+        voter,
+        selectedAnswer,
+        groupId,
+        isAnswerCorrect
+    )
+
 });
 
-// Start the client
-client.initialize();
+pgClient.connect().then(() => {
+    client.initialize();
+})
+
+
+
 
