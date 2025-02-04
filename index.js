@@ -38,13 +38,20 @@ const client = new Client({
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    // client.getContacts().then((contacts) => {
-    //     contacts.map((c) => {
-    //         if(c.isGroup && c.name.includes("Test")) {
-    //             console.log(c.id._serialized, c.name)
-    //         }
-    //     })
-    // })
+    client.getContacts().then((contacts) => {
+        contacts.map((c) => {
+            if(c?.isGroup && c?.name?.includes("Quiz")) {
+                console.log(c.id._serialized, c.name)
+
+                client.sendMessage(
+                    c.id._serialized,
+                    new Poll("currentQuiz.question",
+                        ["a", "b", "c", "d"],
+                        { allowMultipleAnswers: false })
+                ).then(console.log)
+            }
+        })
+    })
 
     cron.schedule("5 4 * * 1", async () => {
         for (let index = 0; index < GROUP_IDs.length; index++) {
@@ -59,7 +66,7 @@ The top performers of the week.
 Let’s give a huge round of applause! 👏
 
 ${leaderBoard.rows.map((leader, index) => {
-                return (`${placeEmojis[index]} *${index + 1}st Place:* 
+                return (`${placeEmojis[index]} *${index + 1}st Place:*
 ${leader.candidate_id} - ${leader.points} points`)
             }).join('\n')}
 
@@ -77,101 +84,101 @@ Stay motivated and keep learning! 🚀📚
         }
     })
 
-    cron.schedule("30 4 * * *", async () => {
-        try {
-            const { previous, current: currentQuiz, answer, pageIdToBeMoved } = await getQuizData()
-
-            if (currentQuiz?.code) {
-                // Generate Quiz image
-                await generateCodeSnippet(currentQuiz.code);
-            }
-
-            if (previous) {
-                const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
-                const previousDiscordQuizMessageId = await readFromRedis(DISCORD_CHANNEL_ID)
-
-                const message = "The answer is \n" + previous.answer
-                for (let index = 0; index < GROUP_IDs.length; index++) {
-                    const gid = GROUP_IDs[index];
-                    const messageId = previousQuizMessageIds[index]?.result
-
-                    try {
-                        await client.getMessageById(messageId)
-                        await client.sendMessage(
-                            gid,
-                            message,
-                            previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
-                        );
-                    } catch (err) {
-                        await client.sendMessage(
-                            gid,
-                            message
-                        )
-                    }
-                }
-
-                if (previousDiscordQuizMessageId?.result) {
-                    try {
-                        await getDiscordMessageById(previousDiscordQuizMessageId?.result);
-                        await sendAMessageToDiscord({
-                            content: message,
-                            message_reference: {
-                                message_id: previousDiscordQuizMessageId?.result
-                            }
-                        })
-                    } catch (err) {
-                        await sendAMessageToDiscord({
-                            content: message,
-                        })
-                    }
-                } else {
-                    await sendAMessageToDiscord({
-                        content: message,
-                    })
-                }
-            }
-
-            if (currentQuiz?.code) {
-                const media = MessageMedia.fromFilePath(imagePath)
-                for (let index = 0; index < GROUP_IDs.length; index++) {
-                    const gid = GROUP_IDs[index];
-                    await client.sendMessage(gid, media, { caption: "Refer to this code." });
-                }
-                const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
-                await sendAMessageToDiscord({ content: formattedCode })
-            }
-
-            for (let index = 0; index < GROUP_IDs.length; index++) {
-                const gid = GROUP_IDs[index];
-                const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
-                await writeToRedis(gid, message.id._serialized)
-                const options = ['a', 'b', 'c', 'd'];
-                await saveAnswer(
-                    message.id._serialized,
-                    options.findIndex((ops) => ops === answer.slice(0, 1).toLocaleLowerCase()),
-                    gid
-                )
-            }
-
-            const poll = await postPollToDiscord({
-                question: currentQuiz.question,
-                options: currentQuiz.options.map((a) => a.slice(3))
-            })
-
-            await sendAMessageToDiscord({
-                content: "@everyone quiz of the day",
-                message_reference: {
-                    message_id: poll.data.id
-                }
-            })
-            await writeToRedis(DISCORD_CHANNEL_ID, `${poll.data.id}`)
-            await moveQuizStatusToDone(pageIdToBeMoved);
-        } catch (err) {
-            console.log(err)
-            console.log(JSON.stringify(err, null, 2))
-        }
-
-    })
+    // cron.schedule("30 4 * * *", async () => {
+    //     try {
+    //         const { previous, current: currentQuiz, answer, pageIdToBeMoved } = await getQuizData()
+    //
+    //         if (currentQuiz?.code) {
+    //             // Generate Quiz image
+    //             await generateCodeSnippet(currentQuiz.code);
+    //         }
+    //
+    //         if (previous) {
+    //             const previousQuizMessageIds = await Promise.all(GROUP_IDs.map((id) => readFromRedis(id)))
+    //             const previousDiscordQuizMessageId = await readFromRedis(DISCORD_CHANNEL_ID)
+    //
+    //             const message = "The answer is \n" + previous.answer
+    //             for (let index = 0; index < GROUP_IDs.length; index++) {
+    //                 const gid = GROUP_IDs[index];
+    //                 const messageId = previousQuizMessageIds[index]?.result
+    //
+    //                 try {
+    //                     await client.getMessageById(messageId)
+    //                     await client.sendMessage(
+    //                         gid,
+    //                         message,
+    //                         previousQuizMessageIds ? { quotedMessageId: previousQuizMessageIds[index]?.result } : undefined
+    //                     );
+    //                 } catch (err) {
+    //                     await client.sendMessage(
+    //                         gid,
+    //                         message
+    //                     )
+    //                 }
+    //             }
+    //
+    //             if (previousDiscordQuizMessageId?.result) {
+    //                 try {
+    //                     await getDiscordMessageById(previousDiscordQuizMessageId?.result);
+    //                     await sendAMessageToDiscord({
+    //                         content: message,
+    //                         message_reference: {
+    //                             message_id: previousDiscordQuizMessageId?.result
+    //                         }
+    //                     })
+    //                 } catch (err) {
+    //                     await sendAMessageToDiscord({
+    //                         content: message,
+    //                     })
+    //                 }
+    //             } else {
+    //                 await sendAMessageToDiscord({
+    //                     content: message,
+    //                 })
+    //             }
+    //         }
+    //
+    //         if (currentQuiz?.code) {
+    //             const media = MessageMedia.fromFilePath(imagePath)
+    //             for (let index = 0; index < GROUP_IDs.length; index++) {
+    //                 const gid = GROUP_IDs[index];
+    //                 await client.sendMessage(gid, media, { caption: "Refer to this code." });
+    //             }
+    //             const formattedCode = `\`\`\`\n${currentQuiz?.code}\n\`\`\``
+    //             await sendAMessageToDiscord({ content: formattedCode })
+    //         }
+    //
+    //         for (let index = 0; index < GROUP_IDs.length; index++) {
+    //             const gid = GROUP_IDs[index];
+    //             const message = await client.sendMessage(gid, new Poll(currentQuiz.question, currentQuiz.options, { allowMultipleAnswers: false }));
+    //             await writeToRedis(gid, message.id._serialized)
+    //             const options = ['a', 'b', 'c', 'd'];
+    //             await saveAnswer(
+    //                 message.id._serialized,
+    //                 options.findIndex((ops) => ops === answer.slice(0, 1).toLocaleLowerCase()),
+    //                 gid
+    //             )
+    //         }
+    //
+    //         const poll = await postPollToDiscord({
+    //             question: currentQuiz.question,
+    //             options: currentQuiz.options.map((a) => a.slice(3))
+    //         })
+    //
+    //         await sendAMessageToDiscord({
+    //             content: "@everyone quiz of the day",
+    //             message_reference: {
+    //                 message_id: poll.data.id
+    //             }
+    //         })
+    //         await writeToRedis(DISCORD_CHANNEL_ID, `${poll.data.id}`)
+    //         await moveQuizStatusToDone(pageIdToBeMoved);
+    //     } catch (err) {
+    //         console.log(err)
+    //         console.log(JSON.stringify(err, null, 2))
+    //     }
+    //
+    // })
 });
 
 client.on("qr", (qr) => {
@@ -193,44 +200,55 @@ client.on('vote_update', async (vote) => {
     const messageId = vote.parentMessage.id._serialized;
     const groupId = vote.parentMessage.to
 
-    const voteHistory = await getVoteHistory(messageId, voter)
-
-    if(selectedAnswer === null) {
-        if(voteHistory.rows.some((res) => res.is_passed)) {
-            await decrementPointLeaderBoard(voter, groupId)
+    console.log(
+        {
+            voter,
+            selectedAnswer,
+            messageId,
+            groupId
         }
-        await removeVoteHistory(messageId, voter)
-        return
-    }
-
-    const answerResult = await getAnswerByMessageId(messageId);
-
-    const isAnswerCorrect = answerResult.rows.some((ans) => Number(ans?.answer) === selectedAnswer)
-
-    if(isAnswerCorrect) {
-        if(voteHistory.rows.length > 0) {
-            await removeVoteHistory(messageId, voter)
-        }
-        await incrementPointLeaderBoard(voter, groupId)
-    } else {
-        if(voteHistory.rows.length > 0) {
-            if(voteHistory.rows.some((res) => res.is_passed)) {
-                await decrementPointLeaderBoard(voter, groupId)
-            }
-
-            await removeVoteHistory(messageId, voter)
-        }
-    }
-
-    await saveVoteHistory(
-        messageId,
-        voter,
-        selectedAnswer,
-        groupId,
-        isAnswerCorrect
     )
 
+    // const voteHistory = await getVoteHistory(messageId, voter)
+    //
+    // if(selectedAnswer === null) {
+    //     if(voteHistory.rows.some((res) => res.is_passed)) {
+    //         await decrementPointLeaderBoard(voter, groupId)
+    //     }
+    //     await removeVoteHistory(messageId, voter)
+    //     return
+    // }
+    //
+    // const answerResult = await getAnswerByMessageId(messageId);
+    //
+    // const isAnswerCorrect = answerResult.rows.some((ans) => Number(ans?.answer) === selectedAnswer)
+    //
+    // if(isAnswerCorrect) {
+    //     if(voteHistory.rows.length > 0) {
+    //         await removeVoteHistory(messageId, voter)
+    //     }
+    //     await incrementPointLeaderBoard(voter, groupId)
+    // } else {
+    //     if(voteHistory.rows.length > 0) {
+    //         if(voteHistory.rows.some((res) => res.is_passed)) {
+    //             await decrementPointLeaderBoard(voter, groupId)
+    //         }
+    //
+    //         await removeVoteHistory(messageId, voter)
+    //     }
+    // }
+    //
+    // await saveVoteHistory(
+    //     messageId,
+    //     voter,
+    //     selectedAnswer,
+    //     groupId,
+    //     isAnswerCorrect
+    // )
+
 });
+
+
 
 pgClient.connect().then(() => {
     client.initialize();
