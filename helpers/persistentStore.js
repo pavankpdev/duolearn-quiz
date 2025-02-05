@@ -1,15 +1,14 @@
-const { QUIZ_COUNTER } = require("../config/IDs")
-const { readFromRedis, writeToRedis } = require("../config/upstash")
+const { readFromRedis, writeToRedis } = require("../config/upstash");
 
 const updateMessageId = async (groupId, messageId) => {
-    return writeToRedis(groupId, messageId)
-}
+  return writeToRedis(groupId, messageId);
+};
 
 const getMessageId = async (groupId) => {
-    return readFromRedis(groupId)
-}
+  return readFromRedis(groupId);
+};
 
 module.exports = {
-    updateMessageId,
-    getMessageId
-}
+  updateMessageId,
+  getMessageId,
+};
