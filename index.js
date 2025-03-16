@@ -196,7 +196,7 @@ Stay motivated and keep learning! 🚀📚
   //     }
   //   });
 
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("0 10 *  * 1", async () => {
     try {
       const { current, past } = await getQuizData();
       if (past && past?.Question) {
