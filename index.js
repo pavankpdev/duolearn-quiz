@@ -273,61 +273,59 @@ client.on("disconnected", (reason) => {
   console.log("Client was logged out", reason);
 });
 
-// client.on("vote_update", async (vote) => {
-//   const { voter } = vote;
-//   const selectedAnswer =
-//     vote.selectedOptions.length === 1 ? vote.selectedOptions[0].localId : null;
-//   const messageId = vote.parentMessage.id._serialized;
-//   const groupId = vote.parentMessage.to;
+client.on("vote_update", async (vote) => {
+  const { voter } = vote;
+  const selectedAnswer =
+    vote.selectedOptions.length === 1 ? vote.selectedOptions[0].localId : null;
+  const messageId = vote.parentMessage.id._serialized;
+  const groupId = vote.parentMessage.to;
 
-//   console.log({
-//     voter,
-//     selectedAnswer,
-//     messageId,
-//     groupId,
-//   });
+  console.log({
+    voter,
+    selectedAnswer,
+    messageId,
+    groupId,
+  });
 
-//   const voteHistory = await getVoteHistory(messageId, voter);
+  const voteHistory = await getVoteHistory(messageId, voter);
 
-//   if (selectedAnswer === null) {
-//     if (voteHistory.rows.some((res) => res.is_passed)) {
-//       await decrementPointLeaderBoard(voter, groupId);
-//     }
-//     await removeVoteHistory(messageId, voter);
-//     return;
-//   }
+  if (selectedAnswer === null) {
+    if (voteHistory.rows.some((res) => res.is_passed)) {
+      await decrementPointLeaderBoard(voter, groupId);
+    }
+    await removeVoteHistory(messageId, voter);
+    return;
+  }
 
-//   const answerResult = await getAnswerByMessageId(messageId);
+  const answerResult = await getAnswerByMessageId(messageId);
 
-//   const isAnswerCorrect = answerResult.rows.some(
-//     (ans) => Number(ans?.answer) === selectedAnswer
-//   );
+  const isAnswerCorrect = answerResult.rows.some(
+    (ans) => Number(ans?.answer) === selectedAnswer
+  );
 
-//   if (isAnswerCorrect) {
-//     if (voteHistory.rows.length > 0) {
-//       await removeVoteHistory(messageId, voter);
-//     }
-//     await incrementPointLeaderBoard(voter, groupId);
-//   } else {
-//     if (voteHistory.rows.length > 0) {
-//       if (voteHistory.rows.some((res) => res.is_passed)) {
-//         await decrementPointLeaderBoard(voter, groupId);
-//       }
+  if (isAnswerCorrect) {
+    if (voteHistory.rows.length > 0) {
+      await removeVoteHistory(messageId, voter);
+    }
+    await incrementPointLeaderBoard(voter, groupId);
+  } else {
+    if (voteHistory.rows.length > 0) {
+      if (voteHistory.rows.some((res) => res.is_passed)) {
+        await decrementPointLeaderBoard(voter, groupId);
+      }
 
-//       await removeVoteHistory(messageId, voter);
-//     }
-//   }
+      await removeVoteHistory(messageId, voter);
+    }
+  }
 
-//   await saveVoteHistory(
-//     messageId,
-//     voter,
-//     selectedAnswer,
-//     groupId,
-//     isAnswerCorrect
-//   );
-// });
-
-client.on("vote_update", console.log);
+  await saveVoteHistory(
+    messageId,
+    voter,
+    selectedAnswer,
+    groupId,
+    isAnswerCorrect
+  );
+});
 
 pgClient.connect().then(() => {
   client.initialize();
