@@ -28,6 +28,5 @@ export const saveVoteHistory = async (
     RETURNING *;
   `;
   const values = [messageId, voterId, option, groupId, isPassed];
-
   return executeQuery<any>(query, values);
 };

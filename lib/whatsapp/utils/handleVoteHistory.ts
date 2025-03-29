@@ -16,14 +16,5 @@ export const handleVoteHistory = async (
     await removeVoteHistory(messageId, voter);
   }
 
-  // Save the new vote history
-  await saveVoteHistory(
-    messageId,
-    voter,
-    selectedAnswer,
-    groupId,
-    isAnswerValid
-  );
-
   return { hasPassedBefore };
 };
