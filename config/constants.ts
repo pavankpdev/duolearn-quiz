@@ -26,7 +26,7 @@ const {
   AIRTABLE_API_BASE_URL,
   AIRTABLE_API_DATABASE_ID,
   AIRTABLE_API_DATABASE_TABLE,
-  DATABASE_URL
+  DATABASE_URL,
 } = process.env as {
   NOTION_QUIZ_DATABASE_ID: string;
   NOTION_SECRET: string;
@@ -49,9 +49,13 @@ const GROUP_IDs =
 
 const EVERY_MINUTE = "* * * * *";
 const EVERY_DAY_AT_10AM_IST = "30 4 * * *";
+const EVERY_MONDAY_AT_10AM_IST = "30 4 * * 1";
 
 const DailyScheduleCronExpression =
   MODE === "dev" ? EVERY_MINUTE : EVERY_DAY_AT_10AM_IST;
+
+const WeeklyScheduleCronExpression =
+  MODE === "dev" ? EVERY_MINUTE : EVERY_MONDAY_AT_10AM_IST;
 
 export {
   GROUP_IDs,
@@ -70,4 +74,6 @@ export {
   AIRTABLE_API_DATABASE_TABLE,
   DATABASE_URL,
   DailyScheduleCronExpression,
+  WeeklyScheduleCronExpression,
+  MODE,
 };

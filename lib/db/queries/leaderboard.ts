@@ -49,3 +49,16 @@ export const decrementLeaderBoardPoint = async (
 
   await executeTransaction(queries);
 };
+
+export const getCurrentLeaderBoard = async (groupId: string) => {
+  const query = `
+  SELECT candidate_id, points
+  FROM "leaderboard"
+  WHERE group_id = $1
+  ORDER BY points DESC
+  LIMIT 5;
+`;
+
+  const values = [groupId];
+  return executeQuery<any>(query, values);
+};
