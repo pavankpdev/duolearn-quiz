@@ -1,4 +1,4 @@
-import { pgClient } from "@config/pg";
+import { executeQuery } from "../utils/executeQuery";
 
 export const saveAnswer = async (
   messageId: string,
@@ -6,10 +6,10 @@ export const saveAnswer = async (
   groupId: string
 ): Promise<void> => {
   const query = `INSERT INTO "answers" (message_id, answer, group_id) VALUES ($1, $2, $3)`;
-  await pgClient.query(query, [messageId, answer, groupId]);
+  await executeQuery(query, [messageId, answer, groupId]);
 };
 
 export const getAnswerByMessageId = async (messageId: string): Promise<any> => {
   const query = `SELECT * FROM "answers" WHERE message_id = $1`;
-  return pgClient.query(query, [messageId]);
+  return executeQuery(query, [messageId]);
 };

@@ -1,4 +1,4 @@
-import { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } from "./IDs";
+import { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } from "./constants";
 
 export const readFromCache = async (key: string) => {
   const res = await fetch(`${UPSTASH_REDIS_REST_URL}/get/${key}`, {

@@ -1,5 +1,5 @@
 import { Client } from "whatsapp-web.js";
-import { pgClient } from "@config/pg";
+import { pgClient, pgPool } from "@config/pg";
 import { registerEvents } from "./events";
 
 export class WhatsApp {
@@ -11,13 +11,15 @@ export class WhatsApp {
 
   async start() {
     try {
-      await pgClient.connect();
-      console.log("Postgres client connected!");
-
       registerEvents(this.client);
 
       this.client.initialize();
       console.log("WhatsApp client initialized!");
+
+      pgPool.on("error", (err) => {
+        console.error("Unexpected error on idle client", err);
+        process.exit(-1);
+      });
     } catch (error) {
       console.error("Error starting WhatsApp client:", error);
     }

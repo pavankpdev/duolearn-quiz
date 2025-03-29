@@ -6,7 +6,7 @@ import {
   AIRTABLE_API_DATABASE_ID,
   AIRTABLE_API_DATABASE_TABLE,
   AIRTABLE_API_KEY,
-} from "../../../config/IDs";
+} from "../../../config/constants";
 import { QuizData } from "../types";
 
 export class AirtableAdapter implements IQuizStorage {
@@ -22,7 +22,7 @@ export class AirtableAdapter implements IQuizStorage {
       apiKey: AIRTABLE_API_KEY,
       endpointUrl: AIRTABLE_API_BASE_URL,
     });
-    this.base = Airtable.base(AIRTABLE_API_DATABASE_ID);
+    this.base = Airtable.base(this.baseId);
   }
 
   async fetchQuizData() {

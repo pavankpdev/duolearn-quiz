@@ -1,5 +1,8 @@
 const { Status } = require("whatsapp-web.js");
-const { NOTION_QUIZ_DATABASE_ID, NOTION_SECRET } = require("../config/IDs");
+const {
+  NOTION_QUIZ_DATABASE_ID,
+  NOTION_SECRET,
+} = require("../config/constants");
 
 const n = require("@notionhq/client");
 const Airtable = require("airtable");

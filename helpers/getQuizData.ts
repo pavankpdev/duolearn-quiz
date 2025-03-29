@@ -4,7 +4,7 @@ import {
   AIRTABLE_API_BASE_URL,
   AIRTABLE_API_DATABASE_ID,
   AIRTABLE_API_DATABASE_TABLE,
-} from "../config/IDs";
+} from "../config/constants";
 console.log(
   AIRTABLE_API_KEY,
   AIRTABLE_API_BASE_URL,
