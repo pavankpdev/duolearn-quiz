@@ -8,9 +8,5 @@ export const onReady = () => {
   const storageAdapter = new StorageAdapter(airtableAdapter);
   const quizService = new QuizService(storageAdapter);
 
-  console.log(DailyScheduleCronExpression);
-
-  scheduleJob(DailyScheduleCronExpression, () =>
-    sendDailyQuiz(quizService).catch(console.error)
-  );
+  scheduleJob(DailyScheduleCronExpression, () => sendDailyQuiz(quizService));
 };

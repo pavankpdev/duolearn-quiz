@@ -7,8 +7,6 @@ import { sendPollToGroups } from "./sendPollToGroups";
 export const sendDailyQuiz = async (qs: QuizService) => {
   try {
     const { current, past } = await qs.getQuizData();
-    console.log("Current Quiz", current);
-    console.log("Past Quiz", past);
 
     if (past && past?.Question) {
       const message = preparePollAnswer(
